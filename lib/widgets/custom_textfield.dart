@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 // ignore: must_be_immutable
 class CustomTextField extends StatelessWidget {
   CustomTextField(
-      {this.labeltext, this.prefix, this.onChanged, required this.obscureText});
+      {super.key,
+      this.labeltext,
+      this.prefix,
+      this.onChanged,
+      required this.obscureText});
   String? labeltext;
   Widget? prefix;
   Function(String)? onChanged;
@@ -17,19 +21,22 @@ class CustomTextField extends StatelessWidget {
           if (data!.isEmpty) {
             return "Required field";
           }
+          return null;
         },
         onChanged: onChanged,
+        cursorColor: Colors.black.withOpacity(0.2),
         decoration: InputDecoration(
           labelText: labeltext,
           prefixIcon: prefix,
-          labelStyle: TextStyle(fontSize: 14, color: Colors.black),
+          labelStyle: const TextStyle(fontSize: 14, color: Colors.black),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(color: Colors.grey.shade200, width: 2)),
-          floatingLabelStyle: TextStyle(color: Colors.black, fontSize: 18),
+          floatingLabelStyle:
+              const TextStyle(color: Colors.black, fontSize: 18),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.black, width: 1.5)),
+              borderSide: const BorderSide(color: Colors.black, width: 1.5)),
         ));
   }
 }

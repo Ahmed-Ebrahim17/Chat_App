@@ -2,23 +2,19 @@ import 'package:chat_app/constants.dart';
 import 'package:chat_app/screens/chat_screen.dart';
 import 'package:chat_app/screens/register_screen.dart';
 import 'package:chat_app/widgets/custom_button.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
 import '../helper/show _snackBar.dart';
 import '../widgets/custom_textfield.dart';
+import 'cubits/chat_cubit/chat_cubit.dart';
+import 'cubits/login_cubit/login_cubit.dart';
 
 // ignore: must_be_immutable
-class LoginScreen extends StatefulWidget {
-  LoginScreen({super.key});
 
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
+class LoginScreen extends StatelessWidget {
   String? email;
 
   String? password;
@@ -27,120 +23,119 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool isLoading = false;
 
+  LoginScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return ModalProgressHUD(
-      opacity: 0.1,
-      inAsyncCall: isLoading,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: kPriamryColor,
-          centerTitle: true,
-          title: Text(
-            'Login Screen',
-            style: GoogleFonts.lato(color: Colors.black),
+    return BlocConsumer<LoginCubit, LoginState>(
+      listener: (context, state) {
+        if (state is LoginLoading) {
+          isLoading = true;
+        } else if (state is LoginSuccess) {
+          BlocProvider.of<ChatCubit>(context).getMessage();
+          showSnackBar(context, state.msg, Colors.green);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) {
+                return ChatScreen(
+                  email: email!,
+                );
+              },
+            ),
+            (route) => false,
+          );
+          isLoading = false;
+        } else if (state is LoginFailure) {
+          showSnackBar(context, state.errorMessage, Colors.red);
+          isLoading = false;
+        }
+      },
+      builder: (context, state) => ModalProgressHUD(
+        opacity: 0.1,
+        inAsyncCall: isLoading,
+        child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: kPriamryColor,
+            centerTitle: true,
+            title: Text(
+              'Login Screen',
+              style: GoogleFonts.lato(color: Colors.black),
+            ),
           ),
-        ),
-        body: Form(
-          key: formKey,
-          child: Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Align(
-                          alignment: Alignment.topCenter,
-                          child: Image.asset('assets/Person.jpg', width: 100)),
-                      const SizedBox(
-                        height: 30,
-                      ),
-                      CustomTextField(
-                        obscureText: false,
-                        onChanged: (data) {
-                          email = data;
-                        },
-                        prefix: Icon(
-                          Icons.email_outlined,
-                          size: 18,
-                          color: Colors.black,
+          body: Form(
+            key: formKey,
+            child: Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Align(
+                            alignment: Alignment.topCenter,
+                            child:
+                                Image.asset('assets/Person.jpg', width: 100)),
+                        const SizedBox(
+                          height: 30,
                         ),
-                        labeltext: "Email",
-                      ),
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      CustomTextField(
-                        obscureText: true,
-                        onChanged: (data) {
-                          password = data;
-                        },
-                        prefix: Icon(
-                          Icons.lock_outline,
-                          size: 18,
-                          color: Colors.black,
+                        CustomTextField(
+                          obscureText: false,
+                          onChanged: (data) {
+                            email = data;
+                          },
+                          prefix: const Icon(
+                            Icons.email_outlined,
+                            size: 18,
+                            color: Colors.black,
+                          ),
+                          labeltext: "Email",
                         ),
-                        labeltext: "Password",
-                      ),
-                      SizedBox(
-                        height: 12,
-                      ),
-                      CustomButon(
-                        onPressed: () async {
-                          if (formKey.currentState!.validate()) {
-                            isLoading = true;
-                            setState(() {});
-                            try {
-                              await loginUser();
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (BuildContext context) {
-                                    return ChatScreen(
-                                      email: email!,
-                                    );
-                                  },
-                                ),
-                                (route) => false,
-                              );
-                              showSnackBar(context, 'Successful', Colors.green);
-                            } on FirebaseAuthException catch (e) {
-                              if (e.code == 'user-not-found') {
-                                showSnackBar(
-                                    context,
-                                    'No user found for that email.',
-                                    Colors.red);
-                              } else if (e.code == 'wrong-password') {
-                                showSnackBar(
-                                    context,
-                                    'Wrong password provided for that user.',
-                                    Colors.red);
-                              }
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        CustomTextField(
+                          obscureText: true,
+                          onChanged: (data) {
+                            password = data;
+                          },
+                          prefix: const Icon(
+                            Icons.lock_outline,
+                            size: 18,
+                            color: Colors.black,
+                          ),
+                          labeltext: "Password",
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        CustomButon(
+                          onPressed: () async {
+                            if (formKey.currentState!.validate()) {
+                              BlocProvider.of<LoginCubit>(context).loginUser(
+                                  email: email!, password: password!);
                             }
-                            isLoading = false;
-                            setState(() {});
-                          }
-                        },
-                        text: 'Sign in',
-                        color: 0XfF337180,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('Don\'t have an account?'),
-                          TextButton(
-                              onPressed: () {
-                                Navigator.push(context, _CreateRoute());
-                              },
-                              child: Text(
-                                'Register',
-                                style: TextStyle(color: Color(0XfF337180)),
-                              ))
-                        ],
-                      )
-                    ],
+                          },
+                          text: 'Sign in',
+                          color: 0XfF337180,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text('Don\'t have an account?'),
+                            TextButton(
+                                onPressed: () {
+                                  Navigator.push(context, _CreateRoute());
+                                },
+                                child: const Text(
+                                  'Register',
+                                  style: TextStyle(color: Color(0XfF337180)),
+                                ))
+                          ],
+                        )
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -149,11 +144,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> loginUser() async {
-    final credential = await FirebaseAuth.instance
-        .signInWithEmailAndPassword(email: email!, password: password!);
   }
 }
 
