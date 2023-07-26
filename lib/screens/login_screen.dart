@@ -7,10 +7,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
+import '../features/blocs/auth_bloc/auth_bloc.dart';
+import '../features/blocs/auth_bloc/auth_event.dart';
+import '../features/blocs/auth_bloc/auth_state.dart';
 import '../helper/show _snackBar.dart';
 import '../widgets/custom_textfield.dart';
 import 'cubits/chat_cubit/chat_cubit.dart';
-import 'cubits/login_cubit/login_cubit.dart';
 
 // ignore: must_be_immutable
 
@@ -27,7 +29,7 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<LoginCubit, LoginState>(
+    return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is LoginLoading) {
           isLoading = true;
@@ -113,8 +115,8 @@ class LoginScreen extends StatelessWidget {
                         CustomButon(
                           onPressed: () async {
                             if (formKey.currentState!.validate()) {
-                              BlocProvider.of<LoginCubit>(context).loginUser(
-                                  email: email!, password: password!);
+                              BlocProvider.of<AuthBloc>(context).add(AuthLogin(
+                                  email: email!, password: password!));
                             }
                           },
                           text: 'Sign in',

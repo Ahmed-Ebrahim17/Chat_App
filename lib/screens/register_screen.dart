@@ -1,11 +1,13 @@
 import 'package:chat_app/constants.dart';
+import 'package:chat_app/features/blocs/auth_bloc/auth_bloc.dart';
+import 'package:chat_app/features/blocs/auth_bloc/auth_event.dart';
 import 'package:chat_app/screens/chat_screen.dart';
-import 'package:chat_app/screens/cubits/register_cubit/register_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
+import '../features/blocs/auth_bloc/auth_state.dart';
 import '../helper/show _snackBar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_textfield.dart';
@@ -23,7 +25,7 @@ class RegisterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<RegisterCubit, RegisterState>(
+    return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Registerloading) {
           isLoading = true;
@@ -131,9 +133,9 @@ class RegisterScreen extends StatelessWidget {
                         CustomButon(
                           onPressed: () async {
                             if (formKey.currentState!.validate()) {
-                              BlocProvider.of<RegisterCubit>(context)
-                                  .createUser(
-                                      email: email!, password: password!);
+                              BlocProvider.of<AuthBloc>(context).add(
+                                  AuthRegister(
+                                      email: email!, password: password!));
                             }
                           },
                           text: "Sign up",
